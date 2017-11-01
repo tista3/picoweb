@@ -8,7 +8,7 @@ import uasyncio as asyncio
 import pkg_resources
 
 from .utils import parse_qs
-
+from .captivedns import CaptiveDnsServer
 
 def get_mime_type(fname):
     # Provide minimal detection of important file
@@ -228,7 +228,7 @@ class WebApp:
         This is good place to connect to/initialize a database, for example."""
         self.inited = True
 
-    def run(self, host="127.0.0.1", port=8081, debug=False, lazy_init=False):
+    def run(self, host="127.0.0.1", port=8081, debug=False, lazy_init=False, captive_domains=['esp.device']):
         gc.collect()
         self.debug = int(debug)
         self.init()
@@ -239,5 +239,8 @@ class WebApp:
         if debug:
             print("* Running on http://%s:%s/" % (host, port))
         loop.create_task(asyncio.start_server(self._handle, host, port))
+        if captive_domains is not None:
+            captiveDnsServer = CaptiveDnsServer(host, captive_domains)
+            loop.create_task(captiveDnsServer.start())
         loop.run_forever()
         loop.close()
